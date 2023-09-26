@@ -40,6 +40,10 @@ openai_api_key = st.text_input(
     type='password'  # this line masks the API key input
 )
 
+if not openai_api_key:
+    st.error("Please enter your OpenAI API key to proceed.")
+    st.stop()
+
 uploaded_files = st.file_uploader(
     "Upload pdf, docx, or txt files",
     type=["pdf", "docx", "txt"],
