@@ -144,6 +144,9 @@ selected_document = st.selectbox("Select document", options=document_options)
 # Join all document texts into a single string
 all_documents_concatenated = ' '.join(all_documents_text)
 
+
+
+
 if submit:
     if not is_query_valid(query):
         st.stop()
@@ -166,25 +169,31 @@ if submit:
             for source in result['sources']:
                 st.markdown(source)  # Assuming source is a string representing the document content
                 st.markdown("---")  # Separate sources with a line
+
     else:
+        answers = {}  # Dictionary to store answers per document
+
+        # Adjusted index due to "All documents" option
+        folder_index = folder_indices[document_options.index(selected_document) - 1]
+
         # Query the selected document
-        folder_index = folder_indices[document_options.index(selected_document) - 1]  # Adjusted index due to "All documents" option
         result = query_folder(
             folder_index=folder_index,
             query=query,
             return_all=return_all_chunks,
             llm=llm,
         )
+
         with answer_col:
             st.markdown("#### Answer")
-            st.markdown(result.answer)
+            st.markdown(result.answer)  # assuming result.answer is a string containing the answer
 
         with sources_col:
             st.markdown("#### Sources")
-            for source in result.sources:
-                st.markdown(source.page_content)
-                st.markdown(source.metadata["source"])
-                st.markdown("---")
+            for source in result.sources:  # assuming result.sources is a list of source documents
+                st.markdown(source.page_content)  # assuming source.page_content is a string representing the document content
+                st.markdown(source.metadata["source"])  # assuming source.metadata["source"] provides source document information
+                st.markdown("---")  # Separate sources with a line
 
     # Set queried to True after processing a query
     st.session_state['queried'] = True
