@@ -69,6 +69,38 @@ if uploaded_files:
 
     processed_files = []  # List to store processed files
 
+all_documents_text = []  # List to store text of all documents
+
+def query_all_documents(concatenated_documents, query, llm):
+    # This is a simplified example. In practice, you might need a more
+    # sophisticated method to handle various document structures and formats.
+    
+    # Concatenated document text can be very long, and it may be beneficial
+    # to divide it into smaller chunks, perform the query on each chunk,
+    # and then aggregate the results.
+    
+    # Here we just assume that the concatenated text can be processed in one go.
+    result = llm.query(concatenated_documents, query)
+    
+    # Extract relevant information from the result
+    # This is a simplification and your actual extraction process may be more complex
+    answer = result.get('answer', 'No answer found')
+    
+    # Assume each document is separated by a special separator in the concatenated text
+    # and extract the source document(s) for the answer
+    document_separator = '--- DOCUMENT SEPARATOR ---'
+    documents = concatenated_documents.split(document_separator)
+    sources = []  # List to store source documents
+    
+    for document in documents:
+        if answer in document:
+            sources.append(document)
+    
+    return {
+        'answer': answer,
+        'sources': sources
+    }
+
 # Process uploaded files
 for uploaded_file in uploaded_files:
     try:
@@ -79,7 +111,7 @@ for uploaded_file in uploaded_files:
 
     if not is_file_valid(file):
         continue  # Skip to the next file if it's not valid
-
+    all_documents_text.append(file.text)  # Assuming file.text gives the text of the document
     chunked_file = chunk_file(file, chunk_size=300, chunk_overlap=0)
     processed_files.append(chunked_file)  # Store processed files for later access
 
@@ -109,6 +141,9 @@ with st.form(key="qa_form1"):
 document_options = ["All documents"] + [f"Document {i}" for i, _ in enumerate(uploaded_files, start=1)]
 selected_document = st.selectbox("Select document", options=document_options)
 
+# Join all document texts into a single string
+all_documents_concatenated = ' '.join(all_documents_text)
+
 if submit:
     if not is_query_valid(query):
         st.stop()
@@ -119,24 +154,18 @@ if submit:
     llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
 
     if selected_document == "All documents":
-        # Query all documents
-        for folder_index in folder_indices:
-            result = query_folder(
-                folder_index=folder_index,
-                query=query,
-                return_all=return_all_chunks,
-                llm=llm,
-            )
-            with answer_col:
-                st.markdown(f"#### Answer for Document {folder_indices.index(folder_index) + 1}")
-                st.markdown(result.answer)
-
-            with sources_col:
-                st.markdown(f"#### Sources for Document {folder_indices.index(folder_index) + 1}")
-                for source in result.sources:
-                    st.markdown(source.page_content)
-                    st.markdown(source.metadata["source"])
-                    st.markdown("---")
+        # Query all documents using your new function
+        result = query_all_documents(all_documents_concatenated, query, llm)
+        
+        with answer_col:
+            st.markdown("#### Answer")
+            st.markdown(result['answer'])
+            
+        with sources_col:
+            st.markdown("#### Sources")
+            for source in result['sources']:
+                st.markdown(source)  # Assuming source is a string representing the document content
+                st.markdown("---")  # Separate sources with a line
     else:
         # Query the selected document
         folder_index = folder_indices[document_options.index(selected_document) - 1]  # Adjusted index due to "All documents" option
