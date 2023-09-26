@@ -36,7 +36,8 @@ bootstrap_caching()
 
 openai_api_key = st.text_input(
     "Enter your OpenAI API key. You can get a key at "
-    "[https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)"
+    "[https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)",
+    type='password'  # this line masks the API key input
 )
 
 uploaded_files = st.file_uploader(
