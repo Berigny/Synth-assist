@@ -60,12 +60,17 @@ folder_indices = []
 
 processed_files = []  # List to store processed files
 
+if uploaded_files:
+    if not openai_api_key:
+        st.error("Please enter your OpenAI API key to proceed.")
+        st.stop()
+
+    folder_indices = []
+
+    processed_files = []  # List to store processed files
 
 # Process uploaded files
 for uploaded_file in uploaded_files:
-    if not openai_api_key:
-    st.error("Please enter your OpenAI API key to proceed.")
-    st.stop()
     try:
         file = read_file(uploaded_file)
     except Exception as e:
