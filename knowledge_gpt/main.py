@@ -40,6 +40,23 @@ openai_api_key = st.text_input(
     type='password'  # this line masks the API key input
 )
 
+def synthesize_answer(text, api_key):
+    try:
+        # Making an API call to OpenAI's GPT-3 with a prompt to summarize the text
+        response = openai.Completion.create(
+            engine="text-davinci-003",  # or "text-davinci-003" for GPT-3.5
+            prompt=f"Summarize the following document responses:\n\n{text}",
+            max_tokens=150,  # You might want to adjust this value
+            api_key=api_key
+        )
+        
+        # Assuming the response contains the answer in 'choices' field
+        answer = response['choices'][0]['text'].strip()
+        return answer
+    except Exception as e:
+        return str(e)  # Return the error message in case of an exception
+
+
 uploaded_files = st.file_uploader(
     "Upload pdf, docx, or txt files",
     type=["pdf", "docx", "txt"],
@@ -157,19 +174,27 @@ if submit:
     llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
 
     if selected_document == "All documents":
-        # Query all documents using your new function
-        result = query_all_documents(all_documents_concatenated, query, llm)
+        # Collect all individual answers here
+        individual_answers = []
+        for folder_index in folder_indices:
+            result = query_folder(
+                folder_index=folder_index,
+                query=query,
+                return_all=return_all_chunks,
+                llm=llm,
+            )
+            individual_answers.append(f"Document {folder_indices.index(folder_index) + 1}: {result.answer}")
         
-        with answer_col:
-            st.markdown("#### Answer")
-            st.markdown(result['answer'])
-            
-        with sources_col:
-            st.markdown("#### Sources")
-            for source in result['sources']:
-                st.markdown(source)  # Assuming source is a string representing the document content
-                st.markdown("---")  # Separate sources with a line
+        # Join all individual answers into a single string
+        all_answers_text = "\n".join(individual_answers)
+        
+        # Now pass this collected text to OpenAI for a synthesized response
+        # Assume synthesize_answer is a function that interacts with OpenAI to get a summarized/synthesized answer
+        synthesized_answer = synthesize_answer(all_answers_text, openai_api_key)
 
+        with answer_col:
+            st.markdown("#### Synthesized Answer")
+            st.markdown(synthesized_answer)
     else:
         answers = {}  # Dictionary to store answers per document
 
