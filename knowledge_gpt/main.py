@@ -128,7 +128,7 @@ for uploaded_file in uploaded_files:
 
     if not is_file_valid(file):
         continue  # Skip to the next file if it's not valid
-    all_documents_text.append(file.text)  # Assuming file.text gives the text of the document
+    all_documents_text.append(file.docs[0].page_content)  # Accessing the text content of the document
     chunked_file = chunk_file(file, chunk_size=300, chunk_overlap=0)
     processed_files.append(chunked_file)  # Store processed files for later access
 
