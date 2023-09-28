@@ -185,6 +185,8 @@ selected_document = st.selectbox("Select document", options=document_options)
 # Join all document texts into a single string
 all_documents_concatenated = ' '.join(all_documents_text)
 
+if st.button("Process All Documents"):
+    process_all_documents(documents)
 
 
 
