@@ -40,23 +40,6 @@ openai_api_key = st.text_input(
     type='password'  # this line masks the API key input
 )
 
-def synthesize_answer(text, api_key):
-    try:
-        # Making an API call to OpenAI's GPT-3 with a prompt to summarize the text
-        response = openai.Completion.create(
-            engine="text-davinci-003",  # or "text-davinci-003" for GPT-3.5
-            prompt=f"Summarize the following document responses:\n\n{text}",
-            max_tokens=150,  # You might want to adjust this value
-            api_key=api_key
-        )
-        
-        # Assuming the response contains the answer in 'choices' field
-        answer = response['choices'][0]['text'].strip()
-        return answer
-    except Exception as e:
-        return str(e)  # Return the error message in case of an exception
-
-
 uploaded_files = st.file_uploader(
     "Upload pdf, docx, or txt files",
     type=["pdf", "docx", "txt"],
@@ -86,24 +69,6 @@ if uploaded_files:
 
     processed_files = []  # List to store processed files
 
-all_documents_text = []  # List to store text of all documents
-
-# Update the query_all_documents function
-def query_all_documents(concatenated_documents, query, llm):
-    # Load the QA chain
-    qa_chain = load_qa_with_sources_chain()
-    
-    # Query the concatenated documents using the QA chain
-    result = qa_chain.query(concatenated_documents, query)
-
-# Update the query_folder function
-def query_folder(folder_index, query, return_all, llm):
-    # Load the QA chain
-    qa_chain = load_qa_with_sources_chain()
-    
-    # Query the folder index using the QA chain
-    result = query_folder_old(folder_index, query, return_all, qa_chain)
-
 # Process uploaded files
 for uploaded_file in uploaded_files:
     try:
@@ -114,7 +79,7 @@ for uploaded_file in uploaded_files:
 
     if not is_file_valid(file):
         continue  # Skip to the next file if it's not valid
-    all_documents_text.append(file.docs[0].page_content)  # Accessing the text content of the document
+
     chunked_file = chunk_file(file, chunk_size=300, chunk_overlap=0)
     processed_files.append(chunked_file)  # Store processed files for later access
 
@@ -144,16 +109,17 @@ with st.form(key="qa_form1"):
 document_options = ["All documents"] + [f"Document {i}" for i, _ in enumerate(uploaded_files, start=1)]
 selected_document = st.selectbox("Select document", options=document_options)
 
-# Join all document texts into a single string
-all_documents_concatenated = ' '.join(all_documents_text)
-
-
 if submit:
-    # ... rest of the code ...
-    
+    if not is_query_valid(query):
+        st.stop()
+
+    # Output Columns
+    answer_col, sources_col = st.columns(2)
+
+    llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
+
     if selected_document == "All documents":
-        # Collect all individual answers here
-        individual_answers = []
+        # Query all documents
         for folder_index in folder_indices:
             result = query_folder(
                 folder_index=folder_index,
@@ -161,52 +127,35 @@ if submit:
                 return_all=return_all_chunks,
                 llm=llm,
             )
-            individual_answers.append({
-                'document': f"Document {folder_indices.index(folder_index) + 1}",
-                'answer': result.answer,
-                'sources': result.sources,
-            })
-        
-        # Format the individual answers into a structured text
-        all_answers_text = "\n".join(
-            [f"{answer['document']}:\n{answer['answer']}\nSources:\n{answer['sources']}\n" for answer in individual_answers]
-        )
-        
+            with answer_col:
+                st.markdown(f"#### Answer for Document {folder_indices.index(folder_index) + 1}")
+                st.markdown(result.answer)
 
-        
-        # Now pass this collected text to OpenAI for a synthesized response
-        # Assume synthesize_answer is a function that interacts with OpenAI to get a summarized/synthesized answer
-        synthesized_answer = synthesize_answer(all_answers_text, openai_api_key)
-
-        with answer_col:
-            st.markdown("#### Synthesized Answer")
-            st.markdown(synthesized_answer)
+            with sources_col:
+                st.markdown(f"#### Sources for Document {folder_indices.index(folder_index) + 1}")
+                for source in result.sources:
+                    st.markdown(source.page_content)
+                    st.markdown(source.metadata["source"])
+                    st.markdown("---")
     else:
-        answers = {}  # Dictionary to store answers per document
-
-        # Adjusted index due to "All documents" option
-        folder_index = folder_indices[document_options.index(selected_document) - 1]
-
         # Query the selected document
+        folder_index = folder_indices[document_options.index(selected_document) - 1]  # Adjusted index due to "All documents" option
         result = query_folder(
             folder_index=folder_index,
             query=query,
             return_all=return_all_chunks,
             llm=llm,
         )
-
         with answer_col:
             st.markdown("#### Answer")
-            st.markdown(result.answer)  # assuming result.answer is a string containing the answer
+            st.markdown(result.answer)
 
         with sources_col:
             st.markdown("#### Sources")
-            for answer in individual_answers:
-                st.markdown(f"{answer['document']} Sources:")
-                for source in answer['sources']:
-                    st.markdown(source.page_content)
-                    st.markdown(source.metadata["source"])
-                    st.markdown("---")  # Separate sources with a line
+            for source in result.sources:
+                st.markdown(source.page_content)
+                st.markdown(source.metadata["source"])
+                st.markdown("---")
 
     # Set queried to True after processing a query
     st.session_state['queried'] = True
