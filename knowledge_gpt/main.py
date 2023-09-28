@@ -205,7 +205,7 @@ if submit:
     # Output Columns
     answer_col, sources_col = st.columns(2)
 
-    llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
+    llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0.7)
 
     if selected_document == "All documents":
         process_all_documents(processed_files)  # Call process_all_documents when "All documents" is selected
