@@ -1,4 +1,5 @@
 import streamlit as st
+import openai
 
 from knowledge_gpt.ui import (
     wrap_doc_in_html,
