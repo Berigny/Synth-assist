@@ -10,7 +10,6 @@ from knowledge_gpt.ui import (
 )
 
 from knowledge_gpt.core.caching import bootstrap_caching
-
 from knowledge_gpt.core.parsing import read_file
 from knowledge_gpt.core.chunking import chunk_file
 from knowledge_gpt.core.embedding import embed_files
@@ -41,6 +40,7 @@ openai_api_key = st.text_input(
     type='password'  # this line masks the API key input
 )
 
+
 def synthesize_answer(text, api_key):
     try:
         # Making an API call to OpenAI's GPT-3 with a prompt to summarize the text
@@ -56,6 +56,19 @@ def synthesize_answer(text, api_key):
         return answer
     except Exception as e:
         return str(e)  # Return the error message in case of an exception
+
+def process_document(document):
+    # Extract text content from the document
+    text_content = document.docs[0].page_content  # Adjusted to access the text content of the document
+
+    # Process the text content to generate a synthesized answer
+    synthesized_answer = synthesize_answer(text_content, openai_api_key)  # Adjusted to use the synthesize_answer function
+
+    # Extract source information from the document
+    source_info = document.docs[0].metadata["source"]  # Adjusted to access the source information of the document
+
+    # Return the synthesized answer and source information
+    return synthesized_answer, source_info
 
 def process_all_documents(documents):
     all_sources = []
@@ -186,9 +199,7 @@ selected_document = st.selectbox("Select document", options=document_options)
 all_documents_concatenated = ' '.join(all_documents_text)
 
 if st.button("Process All Documents"):
-    process_all_documents(documents)
-
-
+    process_all_documents(processed_files)  # Adjusted to pass the processed_files list to the function
 
 if submit:
     if not is_query_valid(query):
