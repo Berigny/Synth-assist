@@ -57,6 +57,29 @@ def synthesize_answer(text, api_key):
     except Exception as e:
         return str(e)  # Return the error message in case of an exception
 
+def process_all_documents(documents):
+    all_sources = []
+    all_synthesized_answers = []
+    for document in documents:
+        synthesized_answer, source_info = process_document(document)
+        all_sources.append(source_info)
+        all_synthesized_answers.append(synthesized_answer)
+    
+    # Create a layout with two columns
+    col1, col2 = st.beta_columns(2)
+    
+    # Display all the sources in column 2
+    with col2:
+        st.write("Sources:")
+        for source_info in all_sources:
+            st.write(source_info)
+    
+    # Display all the synthesized answers in column 1
+    with col1:
+        st.write("Synthesized Answers:")
+        for synthesized_answer in all_synthesized_answers:
+            st.write(synthesized_answer)
+
 
 uploaded_files = st.file_uploader(
     "Upload pdf, docx, or txt files",
