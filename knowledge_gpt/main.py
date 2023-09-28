@@ -111,7 +111,7 @@ def query_all_documents(concatenated_documents, query, llm):
     
     for document in documents:
         if answer in document:
-            sources.append(document)
+            sources.append(document.docs[0].page_content)
     
     return {
         'answer': answer,
