@@ -1,5 +1,4 @@
 import streamlit as st
-import openai
 
 from knowledge_gpt.ui import (
     wrap_doc_in_html,
@@ -10,6 +9,7 @@ from knowledge_gpt.ui import (
 )
 
 from knowledge_gpt.core.caching import bootstrap_caching
+
 from knowledge_gpt.core.parsing import read_file
 from knowledge_gpt.core.chunking import chunk_file
 from knowledge_gpt.core.embedding import embed_files
@@ -40,7 +40,6 @@ openai_api_key = st.text_input(
     type='password'  # this line masks the API key input
 )
 
-
 def synthesize_answer(text, api_key):
     try:
         # Making an API call to OpenAI's GPT-3 with a prompt to summarize the text
@@ -56,42 +55,6 @@ def synthesize_answer(text, api_key):
         return answer
     except Exception as e:
         return str(e)  # Return the error message in case of an exception
-
-def process_document(document):
-    # Extract text content from the document
-    text_content = document.docs[0].page_content  # Adjusted to access the text content of the document
-
-    # Process the text content to generate a synthesized answer
-    synthesized_answer = synthesize_answer(text_content, openai_api_key)  # Adjusted to use the synthesize_answer function
-
-    # Extract source information from the document
-    source_info = document.docs[0].metadata["source"]  # Adjusted to access the source information of the document
-
-    # Return the synthesized answer and source information
-    return synthesized_answer, source_info
-
-def process_all_documents(documents):
-    all_sources = []
-    all_synthesized_answers = []
-    for document in documents:
-        synthesized_answer, source_info = process_document(document)
-        all_sources.append(source_info)
-        all_synthesized_answers.append(synthesized_answer)
-    
-    # Create a layout with two columns
-    col1, col2 = st.columns(2)  # Changed from st.beta_columns to st.columns
-    
-    # Display all the sources in column 2
-    with col2:
-        st.write("Sources:")
-        for source_info in all_sources:
-            st.write(source_info)
-    
-    # Display all the synthesized answers in column 1
-    with col1:
-        st.write("Synthesized Answers:")
-        for synthesized_answer in all_synthesized_answers:
-            st.write(synthesized_answer)
 
 
 uploaded_files = st.file_uploader(
@@ -125,35 +88,21 @@ if uploaded_files:
 
 all_documents_text = []  # List to store text of all documents
 
+# Update the query_all_documents function
 def query_all_documents(concatenated_documents, query, llm):
-    # This is a simplified example. In practice, you might need a more
-    # sophisticated method to handle various document structures and formats.
+    # Load the QA chain
+    qa_chain = load_qa_with_sources_chain()
     
-    # Concatenated document text can be very long, and it may be beneficial
-    # to divide it into smaller chunks, perform the query on each chunk,
-    # and then aggregate the results.
+    # Query the concatenated documents using the QA chain
+    result = qa_chain.query(concatenated_documents, query)
+
+# Update the query_folder function
+def query_folder(folder_index, query, return_all, llm):
+    # Load the QA chain
+    qa_chain = load_qa_with_sources_chain()
     
-    # Here we just assume that the concatenated text can be processed in one go.
-    result = llm.query(concatenated_documents, query)
-    
-    # Extract relevant information from the result
-    # This is a simplification and your actual extraction process may be more complex
-    answer = result.get('answer', 'No answer found')
-    
-    # Assume each document is separated by a special separator in the concatenated text
-    # and extract the source document(s) for the answer
-    document_separator = '--- DOCUMENT SEPARATOR ---'
-    documents = concatenated_documents.split(document_separator)
-    sources = []  # List to store source documents
-    
-    for document in documents:
-        if answer in document:
-            sources.append(document.docs[0].page_content)
-    
-    return {
-        'answer': answer,
-        'sources': sources
-    }
+    # Query the folder index using the QA chain
+    result = query_folder_old(folder_index, query, return_all, qa_chain)
 
 # Process uploaded files
 for uploaded_file in uploaded_files:
@@ -198,17 +147,40 @@ selected_document = st.selectbox("Select document", options=document_options)
 # Join all document texts into a single string
 all_documents_concatenated = ' '.join(all_documents_text)
 
+
 if submit:
-    if not is_query_valid(query):
-        st.stop()
-
-    # Output Columns
-    answer_col, sources_col = st.columns(2)
-
-    llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0.7)
-
+    # ... rest of the code ...
+    
     if selected_document == "All documents":
-        process_all_documents(processed_files)  # Call process_all_documents when "All documents" is selected
+        # Collect all individual answers here
+        individual_answers = []
+        for folder_index in folder_indices:
+            result = query_folder(
+                folder_index=folder_index,
+                query=query,
+                return_all=return_all_chunks,
+                llm=llm,
+            )
+            individual_answers.append({
+                'document': f"Document {folder_indices.index(folder_index) + 1}",
+                'answer': result.answer,
+                'sources': result.sources,
+            })
+        
+        # Format the individual answers into a structured text
+        all_answers_text = "\n".join(
+            [f"{answer['document']}:\n{answer['answer']}\nSources:\n{answer['sources']}\n" for answer in individual_answers]
+        )
+        
+
+        
+        # Now pass this collected text to OpenAI for a synthesized response
+        # Assume synthesize_answer is a function that interacts with OpenAI to get a summarized/synthesized answer
+        synthesized_answer = synthesize_answer(all_answers_text, openai_api_key)
+
+        with answer_col:
+            st.markdown("#### Synthesized Answer")
+            st.markdown(synthesized_answer)
     else:
         answers = {}  # Dictionary to store answers per document
 
@@ -229,10 +201,12 @@ if submit:
 
         with sources_col:
             st.markdown("#### Sources")
-            for source in result.sources:  # assuming result.sources is a list of source documents
-                st.markdown(source.page_content)  # assuming source.page_content is a string representing the document content
-                st.markdown(source.metadata["source"])  # assuming source.metadata["source"] provides source document information
-                st.markdown("---")  # Separate sources with a line
+            for answer in individual_answers:
+                st.markdown(f"{answer['document']} Sources:")
+                for source in answer['sources']:
+                    st.markdown(source.page_content)
+                    st.markdown(source.metadata["source"])
+                    st.markdown("---")  # Separate sources with a line
 
     # Set queried to True after processing a query
     st.session_state['queried'] = True
