@@ -79,7 +79,7 @@ def process_all_documents(documents):
         all_synthesized_answers.append(synthesized_answer)
     
     # Create a layout with two columns
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)  # Changed from st.beta_columns to st.columns
     
     # Display all the sources in column 2
     with col2:
@@ -198,9 +198,6 @@ selected_document = st.selectbox("Select document", options=document_options)
 # Join all document texts into a single string
 all_documents_concatenated = ' '.join(all_documents_text)
 
-if st.button("Process All Documents"):
-    process_all_documents(processed_files)  # Adjusted to pass the processed_files list to the function
-
 if submit:
     if not is_query_valid(query):
         st.stop()
@@ -211,27 +208,7 @@ if submit:
     llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
 
     if selected_document == "All documents":
-        # Collect all individual answers here
-        individual_answers = []
-        for folder_index in folder_indices:
-            result = query_folder(
-                folder_index=folder_index,
-                query=query,
-                return_all=return_all_chunks,
-                llm=llm,
-            )
-            individual_answers.append(f"Document {folder_indices.index(folder_index) + 1}: {result.answer}")
-        
-        # Join all individual answers into a single string
-        all_answers_text = "\n".join(individual_answers)
-        
-        # Now pass this collected text to OpenAI for a synthesized response
-        # Assume synthesize_answer is a function that interacts with OpenAI to get a summarized/synthesized answer
-        synthesized_answer = synthesize_answer(all_answers_text, openai_api_key)
-
-        with answer_col:
-            st.markdown("#### Synthesized Answer")
-            st.markdown(synthesized_answer)
+        process_all_documents(processed_files)  # Call process_all_documents when "All documents" is selected
     else:
         answers = {}  # Dictionary to store answers per document
 
