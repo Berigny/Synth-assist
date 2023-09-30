@@ -83,7 +83,7 @@ for uploaded_file in uploaded_files:
     chunked_file = chunk_file(file, chunk_size=300, chunk_overlap=0)
     processed_files.append(chunked_file)  # Store processed files for later access
 
-    with st.progress():
+    with st.progress(0):
         folder_index = embed_files(
             files=[chunked_file],
             embedding=EMBEDDING if model != "debug" else "debug",
