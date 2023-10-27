@@ -85,8 +85,8 @@ for uploaded_file in uploaded_files:
         embedding=EMBEDDING if model != "debug" else "debug",
         vector_store=VECTOR_STORE if model != "debug" else "debug",
         openai_api_key=openai_api_key,
-        )
-     folder_indices.append(folder_index)  # Store folder indices for later querying
+    )
+    folder_indices.append(folder_index)  # Store folder indices for later querying
 
 st.session_state['processed'] = True  # Set processed to True once documents are processed
 
