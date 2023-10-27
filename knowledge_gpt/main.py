@@ -79,7 +79,7 @@ for uploaded_file in uploaded_files:
     chunked_file = chunk_file(file, chunk_size=300, chunk_overlap=0)
     processed_files.append(chunked_file)  # Store processed files for later access
 
-    with st.progress(0):
+    # with st.progress(0):
         folder_index = embed_files(
             files=[chunked_file],
             embedding=EMBEDDING if model != "debug" else "debug",
@@ -109,8 +109,8 @@ if submit:
     if not is_query_valid(query):
         st.stop()
 
-    # Output Columns
-    answer_col, sources_col = st.columns(2)
+    # Output Column (single column for both answers and sources)
+    output_col = st.empty()
 
     llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
 
@@ -123,16 +123,15 @@ if submit:
                 return_all=return_all_chunks,
                 llm=llm,
             )
-            with answer_col:
+            with output_col:
                 st.markdown(f"#### Answer for {uploaded_file.name}")
                 st.markdown(result.answer)
-
-            with sources_col:
-                st.markdown(f"#### Sources for {uploaded_file.name}")
-                for source in result.sources:
-                    st.markdown(source.page_content)
-                    st.markdown(source.metadata["source"])
-                    st.markdown("---")
+                
+                with st.expander(f"Sources for {uploaded_file.name}"):
+                    for source in result.sources:
+                        st.markdown(source.page_content)
+                        st.markdown(source.metadata["source"])
+                        st.markdown("---")
     else:
         # Query the selected document
         doc_index = document_options.index(selected_document) - 1
@@ -144,16 +143,16 @@ if submit:
             return_all=return_all_chunks,
             llm=llm,
         )
-        with answer_col:
+        with output_col:
             st.markdown(f"#### Answer for {uploaded_file.name}")
             st.markdown(result.answer)
 
-        with sources_col:
-            st.markdown(f"#### Sources for {uploaded_file.name}")
-            for source in result.sources:
-                st.markdown(source.page_content)
-                st.markdown(source.metadata["source"])
-                st.markdown("---")
+            with st.expander(f"Sources for {uploaded_file.name}"):
+                for source in result.sources:
+                    st.markdown(source.page_content)
+                    st.markdown(source.metadata["source"])
+                    st.markdown("---")
 
     # Set queried to True after processing a query
     st.session_state['queried'] = True
+
