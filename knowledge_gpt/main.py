@@ -109,8 +109,8 @@ if submit:
     if not is_query_valid(query):
         st.stop()
 
-    # Output Column (single column for both answers and sources)
-    output_col = st.empty()
+    # Output Columns
+    answer_col, sources_col = st.columns(2)
 
     llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
 
@@ -123,15 +123,16 @@ if submit:
                 return_all=return_all_chunks,
                 llm=llm,
             )
-            with output_col:
+            with answer_col:
                 st.markdown(f"#### Answer for {uploaded_file.name}")
                 st.markdown(result.answer)
-                
-                with st.expander(f"Sources for {uploaded_file.name}"):
-                    for source in result.sources:
-                        st.markdown(source.page_content)
-                        st.markdown(source.metadata["source"])
-                        st.markdown("---")
+
+            with sources_col:
+                st.markdown(f"#### Sources for {uploaded_file.name}")
+                for source in result.sources:
+                    st.markdown(source.page_content)
+                    st.markdown(source.metadata["source"])
+                    st.markdown("---")
     else:
         # Query the selected document
         doc_index = document_options.index(selected_document) - 1
@@ -143,16 +144,16 @@ if submit:
             return_all=return_all_chunks,
             llm=llm,
         )
-        with output_col:
+        with answer_col:
             st.markdown(f"#### Answer for {uploaded_file.name}")
             st.markdown(result.answer)
 
-            with st.expander(f"Sources for {uploaded_file.name}"):
-                for source in result.sources:
-                    st.markdown(source.page_content)
-                    st.markdown(source.metadata["source"])
-                    st.markdown("---")
+        with sources_col:
+            st.markdown(f"#### Sources for {uploaded_file.name}")
+            for source in result.sources:
+                st.markdown(source.page_content)
+                st.markdown(source.metadata["source"])
+                st.markdown("---")
 
     # Set queried to True after processing a query
     st.session_state['queried'] = True
-
