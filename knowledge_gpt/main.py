@@ -56,10 +56,6 @@ with st.expander("Advanced Options"):
 if not uploaded_files:
     st.stop()
 
-folder_indices = []
-
-processed_files = []  # List to store processed files
-
 if uploaded_files:
     if not openai_api_key:
         st.error("Please enter your OpenAI API key to proceed.")
