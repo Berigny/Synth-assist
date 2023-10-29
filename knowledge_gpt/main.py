@@ -29,8 +29,8 @@ MODEL_LIST = ["gpt-3.5-turbo", "gpt-4"]
 
 # Mapping between the models in MODEL_LIST and OpenAI model names
 OPENAI_MODEL_MAPPING = {
-    "gpt-3.5-turbo": "text-davinci-003",  # Adjust as needed
-    "gpt-4": "gpt-4.0-turbo",  # Adjust as needed
+    "gpt-4": "gpt-4",  # Adjust as needed
+    "gpt-3.5-turbo": "gpt-3.5-turbo",  # Adjust as needed
 }
 
 # Page setup
