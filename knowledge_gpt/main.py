@@ -1,4 +1,11 @@
-import openai
+import openai.error
+
+try:
+    # ...
+except openai.error.InvalidRequestError as e:
+    st.error("An error occurred while processing your request.")
+    return ""
+
 import streamlit as st
 
 from knowledge_gpt.ui import (
@@ -18,13 +25,11 @@ from knowledge_gpt.core.qa import query_folder
 from knowledge_gpt.core.utils import get_llm
 
 import tiktoken
+from openai.embeddings_utils import get_openai_embed_model
 
-def count_tokens(text):
-    try:
-        return len(list(tiktoken.tokenize(text)))
-    except Exception as e:
-        print("Error while tokenizing text:", str(e))
-        return 0
+def count_tokens(text, model="gpt-3.5-turbo"):
+    model = get_openai_embed_model(model)
+    return len(list(tiktoken.text_to_tokens(text, model)))
 
 # Initialize session state if it doesn't exist
 if 'processed' not in st.session_state:
@@ -223,22 +228,28 @@ def synthesize_insights(text, api_key, openai_model):
              "Please shorten it or split your request into multiple parts and try again.")
         return ""
 
-    
     try:
-        response = openai.Completion.create(
-            model=openai_model,
-            prompt=prompt,
-            max_tokens=150,
-            api_key=api_key
-        )
-        return response.choices[0].text.strip()
+        if "turbo" in openai_model:
+            # If using a chat model, use the chat completions endpoint
+            response = openai.ChatCompletion.create(
+                model=openai_model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": text},
+                ],
+                api_key=api_key
+            )
+            return response['choices'][0]['message']['content'].strip()
+        else:
+            # If using a non-chat model, use the completions endpoint
+            response = openai.Completion.create(
+                model=openai_model,
+                prompt=text,
+                max_tokens=150,
+                api_key=api_key
+            )
+            return response['choices'][0]['text'].strip()
     except openai.error.InvalidRequestError as e:
-        st.error("Invalid request. Please check your input and try again.")
-        print("OpenAI API Error:", str(e))
-        return ""
-    except openai.error.OpenAIError as e:
-        st.error("An error occurred while communicating with OpenAI's servers. Please try again later.")
-        print("OpenAI API Error:", str(e))
         return ""
 
 
