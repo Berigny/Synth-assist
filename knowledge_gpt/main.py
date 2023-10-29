@@ -131,6 +131,7 @@ with st.form(key="qa_form1"):
         "Choose a query type",
         options=["Find main themes and insights", "Find main pain and gain points", "Ask another question"]
     )
+    st.session_state['query_type'] = query_type
 
     query = ""
     if query_type == "Find main themes and insights":
@@ -146,10 +147,11 @@ with st.form(key="qa_form1"):
             "Prioritize the pain points based on their importance to the interviewee and the level of satisfaction or dissatisfaction expressed. "
             "Ensure the response is clear, concise, and well-structured, maintaining a formal and analytical tone."
         )
-    elif query_type == "Ask another question":
+    elif query_type == "Ask another question" and 'query_type' in st.session_state and st.session_state['query_type'] == "Ask another question":
         query = st.text_area("Ask a question about the document")
 
     submit = st.form_submit_button("Submit")
+
 
 
 # Create a list of document options, adding an "All documents" option at the start
