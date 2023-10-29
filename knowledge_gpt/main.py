@@ -135,31 +135,19 @@ if 'query_type' not in st.session_state:
 with st.form(key="qa_form1"):
     query_type = st.selectbox(
         "Choose a query type",
-        options=["Find main themes and insights", "Find main pain and gain points", "Ask another question"],
-        key='selected_query_type',
-        on_change=on_query_type_change
+        options=["Find main themes and insights", "Find key opportunities and recommendations", "Ask another question"],
+        key='selected_query_type'
     )
 
     query = ""
     if query_type == "Find main themes and insights":
-        query = (
-            "Can you provide a detailed analysis of the key insights, patterns, and themes present in the transcript? "
-            "Include specific examples or quotes to support your analysis, and highlight any supporting facts, evidence, or statistics if available. "
-            "Please ensure the response is clear, concise, and well-structured for easy readability, maintaining a formal and analytical tone."
-        )
-    elif query_type == "Find main pain and gain points":
-        query = (
-            "Can you identify the major pain points or unmet needs expressed by the interviewees in the transcript? "
-            "Provide relevant quotes to capture the essence of each issue, and offer explanations on how they relate to the identified pain points or unmet needs. "
-            "Prioritize the pain points based on their importance to the interviewee and the level of satisfaction or dissatisfaction expressed. "
-            "Ensure the response is clear, concise, and well-structured, maintaining a formal and analytical tone."
-        )
-    elif st.session_state.query_type == "Ask another question":
+        query = "provide a detailed analysis of the key insights, patterns, and themes present in the transcript. Identify the major pain points or unmet needs. Also, identify the major gain points or met needs. Include specific examples or quotes to support your analysis, and highlight any supporting facts, evidence, or statistics if available. Please ensure the response is clear, concise, and well-structured for easy readability, maintaining a formal and analytical tone."
+    elif query_type == "Find key opportunities and recommendations":
+        query = "list potential opportunities or recommendations that could address issues present in the transcript. Provide a rationale for each opportunity or recommendation, explaining why it is valuable and how it addresses the specific issue. Ensure that your suggestions are practical, feasible, and well-suited to the context of the interview. Please ensure the response is clear, concise, and well-structured for easy readability, maintaining a formal, solution-oriented, and persuasive tone throughout your analysis."
+    elif query_type == "Ask another question":
         query = st.text_area("Ask a question about the document")
 
     submit = st.form_submit_button("Submit")
-
-
 
 # Create a list of document options, adding an "All documents" option at the start
 document_options = ["All documents"] + [f"Document {i}" for i, _ in enumerate(uploaded_files, start=1)]
@@ -169,7 +157,7 @@ selected_document = "All documents"
 # ...
 
 if submit:
-    if query_type == "Ask another question" and not is_query_valid(query):
+    st.session_state.query_type = query_type
         st.error("Please enter a valid question.")
         st.stop()
 
