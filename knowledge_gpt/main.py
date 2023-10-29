@@ -16,6 +16,11 @@ from knowledge_gpt.core.embedding import embed_files
 from knowledge_gpt.core.qa import query_folder
 from knowledge_gpt.core.utils import get_llm
 
+import tiktoken
+
+def count_tokens(text):
+    return len(list(tiktoken.tokenize(text)))
+
 # Initialize session state if it doesn't exist
 if 'processed' not in st.session_state:
     st.session_state['processed'] = False
@@ -194,13 +199,12 @@ if submit:
     st.session_state['queried'] = True
 
 def synthesize_insights(text, api_key, openai_model):
-    import openai
     openai.api_key = api_key
     
     prompt = f"Provide a summary of the key themes and insights from this:\n{text}"
     print("Model:", openai_model)
     print("Prompt:", prompt)
-    print("Token count:", len(openai.tokenize(prompt)))
+    print("Token count:", count_tokens(prompt))
     
     try:
         response = openai.Completion.create(
