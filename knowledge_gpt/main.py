@@ -219,8 +219,10 @@ def synthesize_insights(text, api_key, openai_model):
     
     # Check if token count exceeds the model's maximum limit
     if token_count > 4096:  # Assuming you are using a model with a 4096 token limit
-        st.error("The text is too long. Please shorten it and try again.")
-        return ""
+    st.error("The text is too long and exceeds the model's maximum token limit. "
+             "Please shorten it or split your request into multiple parts and try again.")
+    return ""
+
     
     try:
         response = openai.Completion.create(
@@ -240,12 +242,14 @@ def synthesize_insights(text, api_key, openai_model):
         return ""
 
 
-
 if st.session_state.get('responses_and_sources'):
     if st.button("Synthesize All Documents"):
+        print("Synthesizing all documents...")  # This should appear in the console
         all_responses = "\n".join(
             item['answer'] for item in st.session_state['responses_and_sources']
         )
+        
+        print("All responses:", all_responses)  # Check the responses string
         
         # Get the OpenAI model name based on the user's selection
         openai_model = OPENAI_MODEL_MAPPING.get(model)
@@ -255,6 +259,7 @@ if st.session_state.get('responses_and_sources'):
             summary = synthesize_insights(all_responses, openai_api_key, openai_model)
             st.markdown("### Synthesized Insights")
             st.markdown(summary)
+
 
 
 
