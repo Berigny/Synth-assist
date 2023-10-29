@@ -218,10 +218,10 @@ def synthesize_insights(text, api_key, openai_model):
     print("Token count:", token_count)
     
     # Check if token count exceeds the model's maximum limit
-if token_count > 4096:  # Assuming you are using a model with a 4096 token limit
-    st.error("The text is too long and exceeds the model's maximum token limit. "
+    if token_count > 4096:  # Assuming you are using a model with a 4096 token limit
+        st.error("The text is too long and exceeds the model's maximum token limit. "
              "Please shorten it or split your request into multiple parts and try again.")
-    return ""
+        return ""
 
     
     try:
