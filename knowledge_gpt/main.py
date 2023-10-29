@@ -126,11 +126,8 @@ if show_full_doc:
             st.warning("No processed documents are available to display.")
 
 
-def on_query_type_change():
+def handle_form_submission():
     st.session_state.query_type = st.session_state.selected_query_type
-
-if 'query_type' not in st.session_state:
-    st.session_state.query_type = "Find main themes and insights"
 
 with st.form(key="qa_form1"):
     query_type = st.selectbox(
@@ -138,6 +135,7 @@ with st.form(key="qa_form1"):
         options=["Find main themes and insights", "Find key opportunities and recommendations", "Ask another question"],
         key='selected_query_type'
     )
+
 
     query = ""
     if query_type == "Find main themes and insights":
@@ -147,7 +145,7 @@ with st.form(key="qa_form1"):
     elif query_type == "Ask another question":
         query = st.text_area("Ask a question about the document")
 
-    submit = st.form_submit_button("Submit")
+    submit = st.form_submit_button("Submit", on_click=handle_form_submission)
 
 # Create a list of document options, adding an "All documents" option at the start
 document_options = ["All documents"] + [f"Document {i}" for i, _ in enumerate(uploaded_files, start=1)]
@@ -157,7 +155,8 @@ selected_document = "All documents"
 # ...
 
 if submit:
-    st.session_state.query_type = query_type
+    # st.session_state.query_type = query_type  # This line should be removed
+    if query_type == "Ask another question" and not is_query_valid(query):
         st.error("Please enter a valid question.")
         st.stop()
 
