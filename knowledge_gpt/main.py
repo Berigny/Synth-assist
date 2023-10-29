@@ -27,6 +27,12 @@ EMBEDDING = "openai"
 VECTOR_STORE = "faiss"
 MODEL_LIST = ["gpt-3.5-turbo", "gpt-4"]
 
+# Mapping between the models in MODEL_LIST and OpenAI model names
+OPENAI_MODEL_MAPPING = {
+    "gpt-3.5-turbo": "text-davinci-003",  # Adjust as needed
+    "gpt-4": "gpt-4.0-turbo",  # Adjust as needed
+}
+
 # Page setup
 st.set_page_config(page_title="HCD-Helper", layout="wide")
 st.header("HCD-Helper")
@@ -47,6 +53,9 @@ uploaded_files = st.file_uploader(
     help="Scanned documents are not supported yet!",
 )
 
+if 'uploaded_document_count' not in st.session_state:
+    st.session_state['uploaded_document_count'] = 0
+
 model: str = st.selectbox("Model", options=MODEL_LIST)  # type: ignore
 
 with st.expander("Advanced Options"):
@@ -57,6 +66,10 @@ if not uploaded_files:
     st.stop()
 
 if uploaded_files:
+    if len(uploaded_files) != st.session_state['uploaded_document_count']:
+        # Clear responses and sources if new documents are uploaded
+        st.session_state['responses_and_sources'] = []
+    st.session_state['uploaded_document_count'] = len(uploaded_files)
     if not openai_api_key:
         st.error("Please enter your OpenAI API key to proceed.")
         st.stop()
@@ -92,10 +105,22 @@ st.session_state['processed'] = True  # Set processed to True once documents are
 
 if show_full_doc:
     with st.expander("Document"):
-        # For simplicity, this code assumes you want to display the last processed file.
-        # You might want to adjust this to show all/selected documents.
-        last_processed_file = processed_files[-1]  # Get the last processed file
-        st.markdown(f"<p>{wrap_doc_in_html(last_processed_file.docs)}</p>", unsafe_allow_html=True)
+        if processed_files:
+            # Create a list of document options for the user to choose from
+            document_options = [f"Document {i + 1}: {file.name}" for i, file in enumerate(uploaded_files)]
+            selected_document_to_view = st.selectbox("Select a document to view", options=document_options, index=len(document_options) - 1)
+
+            # Find the index of the selected document
+            selected_index = document_options.index(selected_document_to_view)
+            
+            # Get the processed content of the selected document
+            selected_processed_file = processed_files[selected_index]
+            
+            # Display the content of the selected document
+            st.markdown(f"<p>{wrap_doc_in_html(selected_processed_file.docs)}</p>", unsafe_allow_html=True)
+        else:
+            st.warning("No processed documents are available to display.")
+
 
 with st.form(key="qa_form1"):
     query = st.text_area("Ask a question about the document")
@@ -113,6 +138,9 @@ if submit:
 
     llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
 
+    if 'responses_and_sources' not in st.session_state:
+        st.session_state['responses_and_sources'] = []
+
     if selected_document == "All documents":
         # Query all documents
         for uploaded_file, folder_index in zip(uploaded_files, folder_indices):
@@ -122,13 +150,19 @@ if submit:
                 return_all=return_all_chunks,
                 llm=llm,
             )
+            response_and_sources = {
+                'answer': result.answer,
+                'sources': [{'content': source.page_content, 'metadata': source.metadata["source"]} for source in result.sources]
+            }
+            st.session_state['responses_and_sources'].append(response_and_sources)
+
+            # Display responses and sources
             st.markdown(f"#### Answer for {uploaded_file.name}")
             st.markdown(result.answer)
-            
             st.markdown("#### Sources:")
-            for source in result.sources:
-                st.markdown(source.page_content)
-                st.markdown(source.metadata["source"])
+            for source in response_and_sources['sources']:
+                st.markdown(source['content'])
+                st.markdown(source['metadata'])
                 st.markdown("---")
     else:
         # Query the selected document
@@ -141,14 +175,47 @@ if submit:
             return_all=return_all_chunks,
             llm=llm,
         )
+        response_and_sources = {
+            'answer': result.answer,
+            'sources': [{'content': source.page_content, 'metadata': source.metadata["source"]} for source in result.sources]
+        }
+        st.session_state['responses_and_sources'].append(response_and_sources)
+
+        # Display responses and sources
         st.markdown(f"#### Answer for {uploaded_file.name}")
         st.markdown(result.answer)
-
         st.markdown("#### Sources:")
-        for source in result.sources:
-            st.markdown(source.page_content)
-            st.markdown(source.metadata["source"])
+        for source in response_and_sources['sources']:
+            st.markdown(source['content'])
+            st.markdown(source['metadata'])
             st.markdown("---")
 
     # Set queried to True after processing a query
     st.session_state['queried'] = True
+
+def synthesize_insights(text, api_key, openai_model):
+    import openai
+    openai.api_key = api_key
+    
+    response = openai.Completion.create(
+        model=openai_model,
+        prompt=f"Provide a summary of the key themes and insights from this:\n{text}",
+        max_tokens=150
+    )
+    return response.choices[0].text.strip()
+
+if st.button("Synthesize All Documents"):
+    all_responses_and_sources = "\n".join(
+        f"{item['answer']}\n{' '.join(source['content'] for source in item['sources'])}"
+        for item in st.session_state['responses_and_sources']
+    )
+    
+    # Get the OpenAI model name based on the user's selection
+    openai_model = OPENAI_MODEL_MAPPING.get(model)
+    if openai_model is None:
+        st.error(f"Model {model} is not supported.")
+    else:
+        summary = synthesize_insights(all_responses_and_sources, openai_api_key, openai_model)
+        st.markdown("### Synthesized Insights")
+        st.markdown(summary)
+
