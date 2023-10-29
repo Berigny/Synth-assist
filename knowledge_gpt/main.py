@@ -112,11 +112,10 @@ if show_full_doc:
         if processed_files:
             # Create a list of document options for the user to choose from
             document_options = [f"Document {i + 1}: {file.name}" for i, file in enumerate(uploaded_files)]
-            # selected_document_to_view = st.selectbox("Select a document to view", options=document_options, index=len(document_options) - 1)
-            selected_document = "All documents"
+            selected_document = "All documents"  # Default to "All documents"
 
             # Find the index of the selected document
-            selected_index = document_options.index(selected_document_to_view)
+            selected_index = document_options.index(selected_document) - 1
             
             # Get the processed content of the selected document
             selected_processed_file = processed_files[selected_index]
@@ -128,6 +127,26 @@ if show_full_doc:
 
 
 with st.form(key="qa_form1"):
+    query_type = st.selectbox(
+    "Choose a query type",
+    options=["Find main themes and insights", "Find main pain and gain points", "Ask another question"]
+)
+
+query = ""
+if query_type == "Find main themes and insights":
+    query = (
+        "Can you provide a detailed analysis of the key insights, patterns, and themes present in the transcript? "
+        "Include specific examples or quotes to support your analysis, and highlight any supporting facts, evidence, or statistics if available. "
+        "Please ensure the response is clear, concise, and well-structured for easy readability, maintaining a formal and analytical tone."
+    )
+elif query_type == "Find main pain and gain points":
+    query = (
+        "Can you identify the major pain points or unmet needs expressed by the interviewees in the transcript? "
+        "Provide relevant quotes to capture the essence of each issue, and offer explanations on how they relate to the identified pain points or unmet needs. "
+        "Prioritize the pain points based on their importance to the interviewee and the level of satisfaction or dissatisfaction expressed. "
+        "Ensure the response is clear, concise, and well-structured, maintaining a formal and analytical tone."
+    )
+elif query_type == "Ask another question":
     query = st.text_area("Ask a question about the document")
     submit = st.form_submit_button("Submit")
 
@@ -138,7 +157,8 @@ selected_document = st.selectbox("Select document", options=document_options)
 # ...
 
 if submit:
-    if not is_query_valid(query):
+    if query_type == "Ask another question" and not is_query_valid(query):
+        st.error("Please enter a valid question.")
         st.stop()
 
     llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=0)
