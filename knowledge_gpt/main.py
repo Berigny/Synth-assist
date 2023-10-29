@@ -243,9 +243,8 @@ def synthesize_insights(text, api_key, openai_model):
 
 if st.session_state.get('responses_and_sources'):
     if st.button("Synthesize All Documents"):
-        all_responses_and_sources = "\n".join(
-            f"{item['answer']}\n{' '.join(source['content'] for source in item['sources'])}"
-            for item in st.session_state['responses_and_sources']
+        all_responses = "\n".join(
+            item['answer'] for item in st.session_state['responses_and_sources']
         )
         
         # Get the OpenAI model name based on the user's selection
@@ -253,8 +252,9 @@ if st.session_state.get('responses_and_sources'):
         if openai_model is None:
             st.error(f"Model {model} is not supported.")
         else:
-            summary = synthesize_insights(all_responses_and_sources, openai_api_key, openai_model)
+            summary = synthesize_insights(all_responses, openai_api_key, openai_model)
             st.markdown("### Synthesized Insights")
             st.markdown(summary)
+
 
 
