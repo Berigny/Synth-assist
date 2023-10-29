@@ -154,7 +154,8 @@ with st.form(key="qa_form1"):
 
 # Create a list of document options, adding an "All documents" option at the start
 document_options = ["All documents"] + [f"Document {i}" for i, _ in enumerate(uploaded_files, start=1)]
-selected_document = st.selectbox("Select document", options=document_options)
+# selected_document = st.selectbox("Select document", options=document_options)
+selected_document = "All documents"
 
 # ...
 
