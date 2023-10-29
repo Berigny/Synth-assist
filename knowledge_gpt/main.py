@@ -197,10 +197,15 @@ def synthesize_insights(text, api_key, openai_model):
     import openai
     openai.api_key = api_key
     
+    prompt = f"Provide a summary of the key themes and insights from this:\n{text}"
+    print("Model:", openai_model)
+    print("Prompt:", prompt)
+    print("Token count:", len(openai.tokenize(prompt)))
+    
     try:
         response = openai.Completion.create(
             model=openai_model,
-            prompt=f"Provide a summary of the key themes and insights from this:\n{text}",
+            prompt=prompt,
             max_tokens=150
         )
         return response.choices[0].text.strip()
