@@ -20,7 +20,11 @@ from knowledge_gpt.core.utils import get_llm
 import tiktoken
 
 def count_tokens(text):
-    return len(list(tiktoken.tokenize(text)))
+    try:
+        return len(list(tiktoken.tokenize(text)))
+    except Exception as e:
+        print("Error while tokenizing text:", str(e))
+        return 0
 
 # Initialize session state if it doesn't exist
 if 'processed' not in st.session_state:
@@ -204,18 +208,26 @@ def synthesize_insights(text, api_key, openai_model):
         st.error("Invalid API key. Please check your input and try again.")
         return ""
 
-    openai.api_key = api_key
-    
     prompt = f"Provide a summary of the key themes and insights from this:\n{text}"
-    print("Model:", openai_model)
+    
+    # Print the prompt to check its content
     print("Prompt:", prompt)
-    print("Token count:", count_tokens(prompt))
+    
+    # Count and print the number of tokens
+    token_count = count_tokens(prompt)
+    print("Token count:", token_count)
+    
+    # Check if token count exceeds the model's maximum limit
+    if token_count > 4096:  # Assuming you are using a model with a 4096 token limit
+        st.error("The text is too long. Please shorten it and try again.")
+        return ""
     
     try:
         response = openai.Completion.create(
             model=openai_model,
             prompt=prompt,
-            max_tokens=150
+            max_tokens=150,
+            api_key=api_key
         )
         return response.choices[0].text.strip()
     except openai.error.InvalidRequestError as e:
@@ -226,6 +238,7 @@ def synthesize_insights(text, api_key, openai_model):
         st.error("An error occurred while communicating with OpenAI's servers. Please try again later.")
         print("OpenAI API Error:", str(e))
         return ""
+
 
 
 if st.session_state.get('responses_and_sources'):
