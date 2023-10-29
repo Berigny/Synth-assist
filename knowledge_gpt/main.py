@@ -109,7 +109,8 @@ if show_full_doc:
         if processed_files:
             # Create a list of document options for the user to choose from
             document_options = [f"Document {i + 1}: {file.name}" for i, file in enumerate(uploaded_files)]
-            selected_document_to_view = st.selectbox("Select a document to view", options=document_options, index=len(document_options) - 1)
+            # selected_document_to_view = st.selectbox("Select a document to view", options=document_options, index=len(document_options) - 1)
+            selected_document = "All documents"
 
             # Find the index of the selected document
             selected_index = document_options.index(selected_document_to_view)
