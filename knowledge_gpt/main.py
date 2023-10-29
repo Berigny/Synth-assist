@@ -1,11 +1,4 @@
 import openai.error
-
-try:
-    # ...
-except openai.error.InvalidRequestError as e:
-    st.error("An error occurred while processing your request.")
-    return ""
-
 import streamlit as st
 
 from knowledge_gpt.ui import (
