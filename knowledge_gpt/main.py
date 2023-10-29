@@ -17,15 +17,6 @@ from knowledge_gpt.core.embedding import embed_files
 from knowledge_gpt.core.qa import query_folder
 from knowledge_gpt.core.utils import get_llm
 
-import tiktoken
-
-def count_tokens(text):
-    try:
-        return len(list(tiktoken.tokenize(text)))
-    except Exception as e:
-        print("Error while tokenizing text:", str(e))
-        return 0
-
 # Initialize session state if it doesn't exist
 if 'processed' not in st.session_state:
     st.session_state['processed'] = False
@@ -204,7 +195,7 @@ if submit:
     st.session_state['queried'] = True
 
 
-def synthesize_insights(text, api_key, openai_model):
+def synthesize_insights(text, api_key):
     if not api_key or not isinstance(api_key, str):
         st.error("Invalid API key. Please check your input and try again.")
         return ""
@@ -213,16 +204,6 @@ def synthesize_insights(text, api_key, openai_model):
     
     # Print the prompt to check its content
     print("Prompt:", prompt)
-    
-    # Count and print the number of tokens
-    token_count = count_tokens(prompt)
-    print("Token count:", token_count)
-    
-    # Check if token count exceeds the model's maximum limit
-    if token_count > 4096:  # Assuming you are using a model with a 4096 token limit
-        st.error("The text is too long and exceeds the model's maximum token limit. "
-             "Please shorten it or split your request into multiple parts and try again.")
-        return ""
 
     try:
         if "turbo" in openai_model:
@@ -269,7 +250,7 @@ if st.session_state.get('responses_and_sources'):
         if openai_model is None:
             st.error(f"Model {model} is not supported.")
         else:
-            summary = synthesize_insights(all_responses, openai_api_key, openai_model)
+            summary = synthesize_insights(all_responses, openai_api_key)
             st.markdown("### Synthesized Insights")
             st.markdown(summary)
 
