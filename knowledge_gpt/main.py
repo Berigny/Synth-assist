@@ -1,3 +1,4 @@
+import openai
 import streamlit as st
 
 from knowledge_gpt.ui import (
@@ -199,6 +200,10 @@ if submit:
     st.session_state['queried'] = True
 
 def synthesize_insights(text, api_key, openai_model):
+    if not api_key or not isinstance(api_key, str):
+        st.error("Invalid API key. Please check your input and try again.")
+        return ""
+
     openai.api_key = api_key
     
     prompt = f"Provide a summary of the key themes and insights from this:\n{text}"
