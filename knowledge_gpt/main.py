@@ -139,9 +139,9 @@ def handle_form_submission():
 with st.form(key="qa_form1"):
     query = ""
     if query_type == "Find main themes and insights":
-        query = "provide a detailed analysis of the key insights, patterns, and themes present in the transcript. Identify the major pain points or unmet needs. Also, identify the major gain points or met needs. Include specific examples or quotes to support your analysis, and highlight any supporting facts, evidence, or statistics if available. Please ensure the response is clear, concise, and well-structured for easy readability, maintaining a formal and analytical tone."
+        query = "provide a detailed analysis of the key insights, patterns, and themes present in the transcript. Identify the associated pain points or unmet needs. Also, identify the associated gain points or met needs. Include specific examples or quotes to support your analysis, and highlight any supporting facts, evidence, or statistics if available. Please ensure the response is in a paragraph, is clear, concise, and well-structured for easy readability, maintaining a formal and analytical tone."
     elif query_type == "Find key opportunities and recommendations":
-        query = "list potential opportunities or recommendations that could address issues present in the transcript. Provide a rationale for each opportunity or recommendation, explaining why it is valuable and how it addresses the specific issue. Ensure that your suggestions are practical, feasible, and well-suited to the context of the interview. Please ensure the response is clear, concise, and well-structured for easy readability, maintaining a formal, solution-oriented, and persuasive tone throughout your analysis."
+        query = "list potential opportunities or recommendations that could address issues present in the transcript. Provide a rationale for each opportunity or recommendation, explaining why it is valuable and how it addresses the specific issue. Ensure that your suggestions are practical, feasible, and well-suited to the context of the interview. Please ensure the response is in a paragraph, is clear, concise, and well-structured for easy readability, maintaining a formal, solution-oriented, and persuasive tone throughout your analysis."
     elif query_type == "Ask another question":
         query = st.text_area("Ask a question about the document")
 
@@ -259,21 +259,24 @@ def synthesize_insights(text, api_key):
 
 if st.session_state.get('responses_and_sources'):
     if st.button("Synthesize All Documents"):
-        print("Synthesizing all documents...")  # This should appear in the console
-        
-        # Change here: Only include the responses, not the sources
         all_responses = "\n".join(
             item['answer'] for item in st.session_state['responses_and_sources']
         )
         
-        print("All responses:", all_responses)  # Check the responses string
+        # Constructing the prompt
+        prompt = (
+            "I have gathered information from various transcripts. Below is a summary of the key points from each document:\n"
+            f"{all_responses}\n"
+            "Based on the information above, please provide a comprehensive summary highlighting the main themes, insights, and important points. Please ensure the response is in a paragraph, is clear, concise, and well-structured for easy readability, maintaining a formal and analytical tone."
+        )
         
-        # Get the OpenAI model name based on the user's selection
         openai_model = OPENAI_MODEL_MAPPING.get(model)
         if openai_model is None:
             st.error(f"Model {model} is not supported.")
         else:
-            summary = synthesize_insights(all_responses, openai_api_key)
+            summary = synthesize_insights(prompt, openai_api_key)
             st.markdown("### Synthesized Insights")
             st.markdown(summary)
+            st.session_state['previous_responses'].append({'answer': summary, 'sources': []})
+
 
