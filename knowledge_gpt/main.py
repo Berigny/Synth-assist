@@ -126,12 +126,19 @@ if show_full_doc:
             st.warning("No processed documents are available to display.")
 
 
+def on_query_type_change():
+    st.session_state.query_type = st.session_state.selected_query_type
+
+if 'query_type' not in st.session_state:
+    st.session_state.query_type = "Find main themes and insights"
+
 with st.form(key="qa_form1"):
     query_type = st.selectbox(
         "Choose a query type",
-        options=["Find main themes and insights", "Find main pain and gain points", "Ask another question"]
+        options=["Find main themes and insights", "Find main pain and gain points", "Ask another question"],
+        key='selected_query_type',
+        on_change=on_query_type_change
     )
-    st.session_state['query_type'] = query_type
 
     query = ""
     if query_type == "Find main themes and insights":
@@ -147,7 +154,7 @@ with st.form(key="qa_form1"):
             "Prioritize the pain points based on their importance to the interviewee and the level of satisfaction or dissatisfaction expressed. "
             "Ensure the response is clear, concise, and well-structured, maintaining a formal and analytical tone."
         )
-    elif query_type == "Ask another question" and 'query_type' in st.session_state and st.session_state['query_type'] == "Ask another question":
+    elif st.session_state.query_type == "Ask another question":
         query = st.text_area("Ask a question about the document")
 
     submit = st.form_submit_button("Submit")
