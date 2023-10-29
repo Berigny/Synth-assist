@@ -210,12 +210,12 @@ def synthesize_insights(text, api_key, openai_model):
 
     prompt = f"Provide a summary of the key themes and insights from this:\n{text}"
     
-    # Print the prompt to check its content
-    print("Prompt:", prompt)
+    # Display the prompt to check its content
+    st.write("Prompt:", prompt)
     
-    # Count and print the number of tokens
+    # Count and display the number of tokens
     token_count = count_tokens(prompt)
-    print("Token count:", token_count)
+    st.write("Token count:", token_count)
     
     # Check if token count exceeds the model's maximum limit
     if token_count > 4096:  # Assuming you are using a model with a 4096 token limit
@@ -230,7 +230,7 @@ def synthesize_insights(text, api_key, openai_model):
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": text},
             ]
-            print("Sending to OpenAI:", messages)  # Add this line to print the request
+            st.write("Sending to OpenAI:", messages)  # Display the request
             response = openai.ChatCompletion.create(
                 model=openai_model,
                 messages=messages,
@@ -239,7 +239,7 @@ def synthesize_insights(text, api_key, openai_model):
             return response['choices'][0]['message']['content'].strip()
         else:
             # If using a non-chat model, use the completions endpoint
-            print("Sending to OpenAI:", prompt)  # Add this line to print the request
+            st.write("Sending to OpenAI:", prompt)  # Display the request
             response = openai.Completion.create(
                 model=openai_model,
                 prompt=prompt,
@@ -248,10 +248,9 @@ def synthesize_insights(text, api_key, openai_model):
             )
             return response['choices'][0]['text'].strip()
     except openai.error.InvalidRequestError as e:
-        print("OpenAI Error:", str(e))  # Print the error message
-        st.error("An error occurred while processing your request. Please check the console for more details.")
+        st.write("OpenAI Error:", str(e))  # Display the error message
+        st.error("An error occurred while processing your request. Please check the output above for more details.")
         return ""
-
 
 if st.session_state.get('responses_and_sources'):
     if st.button("Synthesize All Documents"):
