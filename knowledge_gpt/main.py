@@ -197,25 +197,32 @@ def synthesize_insights(text, api_key, openai_model):
     import openai
     openai.api_key = api_key
     
-    response = openai.Completion.create(
-        model=openai_model,
-        prompt=f"Provide a summary of the key themes and insights from this:\n{text}",
-        max_tokens=150
-    )
-    return response.choices[0].text.strip()
+    try:
+        response = openai.Completion.create(
+            model=openai_model,
+            prompt=f"Provide a summary of the key themes and insights from this:\n{text}",
+            max_tokens=150
+        )
+        return response.choices[0].text.strip()
+    except openai.error.OpenAIError as e:
+        st.error("An error occurred while communicating with OpenAI's servers. Please try again later.")
+        print("OpenAI API Error:", str(e))  # Log the error for further investigation
+        return ""
 
-if st.button("Synthesize All Documents"):
-    all_responses_and_sources = "\n".join(
-        f"{item['answer']}\n{' '.join(source['content'] for source in item['sources'])}"
-        for item in st.session_state['responses_and_sources']
-    )
-    
-    # Get the OpenAI model name based on the user's selection
-    openai_model = OPENAI_MODEL_MAPPING.get(model)
-    if openai_model is None:
-        st.error(f"Model {model} is not supported.")
-    else:
-        summary = synthesize_insights(all_responses_and_sources, openai_api_key, openai_model)
-        st.markdown("### Synthesized Insights")
-        st.markdown(summary)
+if st.session_state.get('responses_and_sources'):
+    if st.button("Synthesize All Documents"):
+        all_responses_and_sources = "\n".join(
+            f"{item['answer']}\n{' '.join(source['content'] for source in item['sources'])}"
+            for item in st.session_state['responses_and_sources']
+        )
+        
+        # Get the OpenAI model name based on the user's selection
+        openai_model = OPENAI_MODEL_MAPPING.get(model)
+        if openai_model is None:
+            st.error(f"Model {model} is not supported.")
+        else:
+            summary = synthesize_insights(all_responses_and_sources, openai_api_key, openai_model)
+            st.markdown("### Synthesized Insights")
+            st.markdown(summary)
+
 
