@@ -219,26 +219,38 @@ def synthesize_insights(text, api_key, openai_model):
     
     # Check if token count exceeds the model's maximum limit
     if token_count > 4096:  # Assuming you are using a model with a 4096 token limit
-        st.error("The text is too long. Please shorten it and try again.")
-        return ""
-    
-    try:
-        response = openai.Completion.create(
-            model=openai_model,
-            prompt=prompt,
-            max_tokens=150,
-            api_key=api_key
-        )
-        return response.choices[0].text.strip()
-    except openai.error.InvalidRequestError as e:
-        st.error("Invalid request. Please check your input and try again.")
-        print("OpenAI API Error:", str(e))
-        return ""
-    except openai.error.OpenAIError as e:
-        st.error("An error occurred while communicating with OpenAI's servers. Please try again later.")
-        print("OpenAI API Error:", str(e))
+        st.error("The text is too long and exceeds the model's maximum token limit. "
+             "Please shorten it or split your request into multiple parts and try again.")
         return ""
 
+    try:
+        if "turbo" in openai_model:
+            # If using a chat model, use the chat completions endpoint
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": text},
+            ]
+            print("Sending to OpenAI:", messages)  # Add this line to print the request
+            response = openai.ChatCompletion.create(
+                model=openai_model,
+                messages=messages,
+                api_key=api_key
+            )
+            return response['choices'][0]['message']['content'].strip()
+        else:
+            # If using a non-chat model, use the completions endpoint
+            print("Sending to OpenAI:", prompt)  # Add this line to print the request
+            response = openai.Completion.create(
+                model=openai_model,
+                prompt=prompt,
+                max_tokens=150,
+                api_key=api_key
+            )
+            return response['choices'][0]['text'].strip()
+    except openai.error.InvalidRequestError as e:
+        print("OpenAI Error:", str(e))  # Print the error message
+        st.error("An error occurred while processing your request. Please check the console for more details.")
+        return ""
 
 
 if st.session_state.get('responses_and_sources'):
