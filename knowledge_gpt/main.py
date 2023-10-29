@@ -204,10 +204,15 @@ def synthesize_insights(text, api_key, openai_model):
             max_tokens=150
         )
         return response.choices[0].text.strip()
+    except openai.error.InvalidRequestError as e:
+        st.error("Invalid request. Please check your input and try again.")
+        print("OpenAI API Error:", str(e))
+        return ""
     except openai.error.OpenAIError as e:
         st.error("An error occurred while communicating with OpenAI's servers. Please try again later.")
-        print("OpenAI API Error:", str(e))  # Log the error for further investigation
+        print("OpenAI API Error:", str(e))
         return ""
+
 
 if st.session_state.get('responses_and_sources'):
     if st.button("Synthesize All Documents"):
