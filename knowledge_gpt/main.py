@@ -59,9 +59,12 @@ if 'uploaded_document_count' not in st.session_state:
 
 model: str = st.selectbox("Model", options=MODEL_LIST)  # type: ignore
 
-with st.expander("Advanced Options"):
-    return_all_chunks = st.checkbox("Show all chunks retrieved from vector search")
-    show_full_doc = st.checkbox("Show parsed contents of the document")
+# with st.expander("Advanced Options"):
+#    return_all_chunks = st.checkbox("Show all chunks retrieved from vector search")
+#    show_full_doc = st.checkbox("Show parsed contents of the document")
+
+return_all_chunks = False  # Set default value
+show_full_doc = False  # Set default value
 
 if not uploaded_files:
     st.stop()
