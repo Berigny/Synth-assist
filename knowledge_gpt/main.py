@@ -47,6 +47,13 @@ openai_api_key = st.text_input(
     type='password'  # this line masks the API key input
 )
 
+# Place the query type selector outside the form
+query_type = st.selectbox(
+    "Choose a query type",
+    options=["Find main themes and insights", "Find key opportunities and recommendations", "Ask another question"],
+    key='selected_query_type'
+)
+
 uploaded_files = st.file_uploader(
     "Upload pdf, docx, or txt files",
     type=["pdf", "docx", "txt"],
@@ -130,13 +137,6 @@ def handle_form_submission():
     st.session_state.query_type = st.session_state.selected_query_type
 
 with st.form(key="qa_form1"):
-    query_type = st.selectbox(
-        "Choose a query type",
-        options=["Find main themes and insights", "Find key opportunities and recommendations", "Ask another question"],
-        key='selected_query_type'
-    )
-
-
     query = ""
     if query_type == "Find main themes and insights":
         query = "provide a detailed analysis of the key insights, patterns, and themes present in the transcript. Identify the major pain points or unmet needs. Also, identify the major gain points or met needs. Include specific examples or quotes to support your analysis, and highlight any supporting facts, evidence, or statistics if available. Please ensure the response is clear, concise, and well-structured for easy readability, maintaining a formal and analytical tone."
