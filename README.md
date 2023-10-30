@@ -22,5 +22,5 @@ SynthAssist is a Streamlit-based web application designed to assist users in syn
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/your_username_/SynthAssist.git
-   cd SynthAssist
+   git clone https://github.com/your_username_/Synth-assist.git
+   cd Synth-assist
