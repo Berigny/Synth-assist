@@ -35,8 +35,8 @@ OPENAI_MODEL_MAPPING = {
 }
 
 # Page setup
-st.set_page_config(page_title="HCD-Helper", layout="wide")
-st.header("HCD-Helper")
+st.set_page_config(page_title="Synth-Assist", layout="wide")
+st.header("Synth-Assist")
 
 # Enable caching for expensive functions
 bootstrap_caching()
@@ -49,7 +49,7 @@ openai_api_key = st.text_input(
 
 # Place the query type selector outside the form
 query_type = st.selectbox(
-    "Choose a query type",
+    "What synthesis do you need?",
     options=["Find main themes and insights", "Find key opportunities and recommendations", "Ask another question"],
     key='selected_query_type'
 )
@@ -143,9 +143,9 @@ with st.form(key="qa_form1"):
     elif query_type == "Find key opportunities and recommendations":
         query = "list potential opportunities or recommendations that could address issues present in the transcript. Provide a rationale for each opportunity or recommendation, explaining why it is valuable and how it addresses the specific issue. Ensure that your suggestions are practical, feasible, and well-suited to the context of the interview. Please ensure the response is in a paragraph, is clear, concise, and well-structured for easy readability, maintaining a formal, solution-oriented, and persuasive tone throughout your analysis."
     elif query_type == "Ask another question":
-        query = st.text_area("Ask a question about the document")
+        query = st.text_area("Ask a question about the transcript/s")
 
-    submit = st.form_submit_button("Submit", on_click=handle_form_submission)
+    submit = st.form_submit_button("Start Synthesis", on_click=handle_form_submission)
 
 # Create a list of document options, adding an "All documents" option at the start
 document_options = ["All documents"] + [f"Document {i}" for i, _ in enumerate(uploaded_files, start=1)]
@@ -261,7 +261,7 @@ def synthesize_insights(text, api_key, openai_model):
         return ""
 
 if st.session_state.get('responses_and_sources'):
-    if st.button("Synthesize All Documents"):
+    if st.button("Synthesize All Transcripts"):
         all_responses = "\n".join(
             item['answer'] for item in st.session_state['responses_and_sources']
         )
