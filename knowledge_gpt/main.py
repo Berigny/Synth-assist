@@ -217,8 +217,11 @@ if submit:
     # Set queried to True after processing a query
     st.session_state['queried'] = True
 
+# Initialize 'previous_responses' in session state if it doesn't exist
+if 'previous_responses' not in st.session_state:
+    st.session_state['previous_responses'] = []
 
-def synthesize_insights(text, api_key):
+def synthesize_insights(text, api_key, openai_model):
     if not api_key or not isinstance(api_key, str):
         st.error("Invalid API key. Please check your input and try again.")
         return ""
@@ -274,7 +277,7 @@ if st.session_state.get('responses_and_sources'):
         if openai_model is None:
             st.error(f"Model {model} is not supported.")
         else:
-            summary = synthesize_insights(prompt, openai_api_key)
+            summary = synthesize_insights(prompt, openai_api_key, openai_model)
             st.markdown("### Synthesized Insights")
             st.markdown(summary)
             st.session_state['previous_responses'].append({'answer': summary, 'sources': []})
