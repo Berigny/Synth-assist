@@ -26,11 +26,11 @@ if 'queried' not in st.session_state:
 
 EMBEDDING = "openai"
 VECTOR_STORE = "faiss"
-MODEL_LIST = ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
+MODEL_LIST = ["gpt-3.5-turbo", "gpt-4", "gpt-4-1106-preview"]
 
 # Mapping between the models in MODEL_LIST and OpenAI model names
 OPENAI_MODEL_MAPPING = {
-    "gpt-4-turbo": "gpt-4-32k",  # Adjust as needed
+    "gpt-4-turbo": "gpt-4-1106-preview",  # Adjust as needed
     "gpt-4": "gpt-4",  # Adjust as needed
     "gpt-3.5-turbo": "gpt-3.5-turbo",  # Adjust as needed
 }
